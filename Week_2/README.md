@@ -32,6 +32,8 @@ Matching Cascade divided into two parts:
 - The trajectories that have not been lost are matched first, and the ones that are lost are more distant match back.
 - Through this part of the processing, the occluded target can be retrieved again, reduce the number of ID switches.
 
-*The track of the target that was just blocked cannot match the detection, and the target temporarily disappears from the image. When the occluded target reappears later, you should try to keep the ID assigned by the occluded target unchanged and reduce the number of ID Switch appearances. This requires cascading matching.
+The track of the target that temporarily disappears from the image cannot match the detection (in SORT, we say it's unmatch track)
+## Objective: 
+- When the occluded target reappears later, we should try to keep the ID assigned by the occluded target unchanged and reduce the number of ID Switch appearances. This requires cascading matching.
 
 
