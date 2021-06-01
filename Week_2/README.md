@@ -24,7 +24,7 @@ Plus: Matching Cascade
 Matching Cascade divided into two parts:
 
 ### Part1: Cost matrix
-- Calculating the similarity matrix (cost matrix) and gated matrix (limit the excessively large values in the cost matrix). 
+- Using Appearance model(ReID), calculating the similarity matrix (cost matrix) and gated matrix (limit the excessively large values in the cost matrix). 
 - Cost matrix is used Cosine Similarity and motion similarity (Mahalanobis distance).
 
 ### Part2: Data association for cascade matching
