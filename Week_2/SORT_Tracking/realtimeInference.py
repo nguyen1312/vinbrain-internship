@@ -14,16 +14,14 @@ def main():
     fps = 0.0
     count = 0 
     while(True):
-        _, frame = cap.read()
-        if frame is None:
+        _, img_in = cap.read()
+        if img_in is None:
             time.sleep(0.1)
             count += 1
             if count < 3:
                 continue
             else: 
                 break
-        img_in = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        cv2.imshow("preview", img_in)
         t1 = time.time()
         with torch.no_grad():
             detections = model(img_in)
@@ -44,7 +42,8 @@ def main():
         fps  = ( fps + (1./(time.time()-t1)) ) / 2
         cv2.putText(img_in, "FPS: {:.2f}".format(fps), (0, 30),
                           cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
-        cv2.imshow('output', img_in)
+        # cv2.imshow('output', img_in)
+        cv2.imshow("Preview", img_in)
         count += 1
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

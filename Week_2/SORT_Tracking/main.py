@@ -2,83 +2,55 @@ from lib import *
 from detectionYoloV5 import detectImage
 from sort import SORT
 from inference import inferenceTrackFromFrame
-if __name__ == "__main__":
-    # path_to_image = osp.relpath("./sample_image/sample.jpg")
-    # model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
-    # tracker = SORT()
+import time
 
-    # image = cv2.imread(path_to_image)
-    # track_img = inferenceTrackFromFrame(tracker, image, model)
-    # track_img = cv2.resize(track_img, dsize=(700, 700))
-    # cv2.imshow("Result", track_img)
-    # cv2.waitKey(0) 
+path_to_video = osp.relpath("./sample_video/pedestrian.mp4")
 
-
-    # detections = model(path_to_image)
-    # tensorBBox = detections.xyxy[0].detach().numpy()
-    # bboxPerson = tensorBBox[np.where(tensorBBox[:, -1] == 0)]
-    # print(tracker.update(bboxPerson))
-
-    # tracker = SORT()
-    # cap = cv2.VideoCapture('pedestrian-1.mp4') # read video
-    # while cap.isOpened():
-    #     ret, image = cap.read()
-    #     if not ret:
-    #     break
-    #     track_img = inferenceTrackFromFrame(tracker, image, model)
-    #     track_img = cv2.resize(track_img, dsize=(50, 50))
-    #     # track_img = Image.fromarray(track_img).resize((300,300))
-    #     clear_output()
-    #     cv2_imshow(track_img)
-        
-    # cv2.destroyAllWindows()
-    # cap.release()
-
-    path_to_video = osp.relpath("./sample_video/pedestrian.mp4")
+def main():
     model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
     tracker = SORT()
-    cap = cv2.VideoCapture(path_to_video) # read video
-    res_arr = []
-    while cap.isOpened():
-        ret, image = cap.read()
-        if not ret:
-            break
-        track_img = inferenceTrackFromFrame(tracker, image, model)
-        track_img = cv2.resize(track_img, dsize=(700, 700))
-        res_arr.append(track_img)
-    cv2.destroyAllWindows()
-    cap.release()
-
-    video = cv2.VideoWriter('res.mp4',-1, 1, (700, 700))
-    for img in res_arr:
-        video.write(img)
-
-    # url = upload_public('res.mp4')   
-    # HTML(f"""<video src={url} width=500 controls/>""")
-
-
-    # Create a VideoCapture object and read from input file
-    # If the input is the camera, pass 0 instead of the video file name
-    cap = cv2.VideoCapture('res.mp4')
-    # Check if camera opened successfully
-    if (cap.isOpened()== False): 
-        print("Error opening video stream or file")
-
-    # Read until video is completed
-    while(cap.isOpened()):
-    # Capture frame-by-frame
-        ret, frame = cap.read()
-        if ret == True:
-            # Display the resulting frame
-            cv2.imshow('Frame',frame)
-            # Press Q on keyboard to  exit
-            if cv2.waitKey(25) & 0xFF == ord('q'):
+    cap = cv2.VideoCapture(path_to_video)
+    fps = 0.0
+    count = 0 
+    while(True):
+        _, img_in = cap.read()
+        if img_in is None:
+            time.sleep(0.1)
+            count += 1
+            if count < 3:
+                continue
+            else: 
                 break
-        # Break the loop
-        else: 
+        t1 = time.time()
+        with torch.no_grad():
+            detections = model(img_in)
+
+        tensorBBox = detections.xyxy[0].detach().numpy()
+        bboxPerson = tensorBBox[np.where(tensorBBox[:, -1] == 0)]
+        track_bbs_ids = tracker.update(bboxPerson)
+        for track_object in track_bbs_ids:  
+            x1 = int(track_object[0])
+            y1 = int(track_object[1])
+            x2 = int(track_object[2])
+            y2 = int(track_object[3])
+            track_label = str(int(track_object[4])) 
+            cv2.rectangle(img_in, (x1, y1), (x2, y2), (0, 255, 255), 4)
+            cv2.putText(img_in, '#' + track_label, (x1 + 5, y1 - 10), 0, 3, (0, 40, 255), thickness = 3)
+        # track_img = inferenceTrackFromFrame(tracker, img_in, model)
+        img_in = cv2.resize(img_in, dsize=(700, 700))
+        fps  = ( fps + (1./(time.time()-t1)) ) / 2
+        cv2.putText(img_in, "FPS: {:.2f}".format(fps), (0, 30),
+                          cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255), 2)
+        # cv2.imshow('output', img_in)
+        cv2.imshow("Preview", img_in)
+        count += 1
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # When everything done, release the video capture object
+    # Close down the video stream
     cap.release()
-    # Closes all the frames
     cv2.destroyAllWindows()
+ 
+if __name__ == '__main__':
+    print(__doc__)
+    main()
