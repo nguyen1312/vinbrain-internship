@@ -80,9 +80,8 @@ self.transform = {
 ## Updating
 - Doing experiment on UNet-SeResnext101 encoder.
 - Learning and applying RaDam optimizer to my project pipeline.
-- T
 ## References
-1. Paper "An Improved Dice Loss for Pneumothorax Segmentation by Mining the Information of Negative Areas" (2020)
+1. Paper: An Improved Dice Loss for Pneumothorax Segmentation by Mining the Information of Negative Areas (2020)
 
 
 
