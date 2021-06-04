@@ -1,33 +1,36 @@
+import sys
+sys.path.append('../../')
+
+from lib import *
+from Conv import ConvBlock
 
 #  Upsample -> ConvBlock -> ConvBlock
-class UpBlockForUNetWithResNet50(nn.Module):    
-    def __init__(self, in_channels, out_channels, up_conv_in_channels=None, up_conv_out_channels=None,
-                 upsampling_method="conv_transpose"):
+class UpBlock(nn.Module):    
+    def __init__(self, chan_in, 
+                       chan_out, 
+                       upconv_in = None, 
+                       upconv_out = None,
+                ):
         super().__init__()
+        if upconv_in == None:
+            upconv_in = chan_in
+        if upconv_out == None:
+            upconv_out = chan_out
+        self.upsample = nn.ConvTranspose2d(upconv_in, upconv_out, kernel_size = 2, stride = 2)
+        self.conv = nn.Sequential(ConvBlock(chan_in, chan_out),
+                                  ConvBlock(chan_out, chan_out))
 
-        if up_conv_in_channels == None:
-            up_conv_in_channels = in_channels
-        if up_conv_out_channels == None:
-            up_conv_out_channels = out_channels
+    def forward(self, x1, x2):
+        x1 = self.upsample(x1)
+        x1 = torch.cat([x1, x2], 1)
+        x1 = self.conv(x1)
+        return x1
+# Test
+if __name__ == "__main__":
+    a = torch.rand(4, 2048, 16, 16)
+    b = torch.rand(4, 1024, 32, 32)
+    convNet = UpBlock(2048, 1024)
+    out = convNet(a, b)
+    print(out.size())
+    print(out)
 
-        if upsampling_method == "conv_transpose":
-            self.upsample = nn.ConvTranspose2d(up_conv_in_channels, up_conv_out_channels, kernel_size=2, stride=2)
-        elif upsampling_method == "bilinear":
-            self.upsample = nn.Sequential(
-                nn.Upsample(mode='bilinear', scale_factor=2),
-                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1)
-            )
-        self.conv_block_1 = ConvBlock(in_channels, out_channels)
-        self.conv_block_2 = ConvBlock(out_channels, out_channels)
-
-    def forward(self, up_x, down_x):
-        """
-        :param up_x: this is the output from the previous up block
-        :param down_x: this is the output from the down block
-        :return: upsampled feature map
-        """
-        x = self.upsample(up_x)
-        x = torch.cat([x, down_x], 1)
-        x = self.conv_block_1(x)
-        x = self.conv_block_2(x)
-        return x

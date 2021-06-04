@@ -1,8 +1,7 @@
 from lib import *
-
-def train(epoch, net, train_dataloader, accumulation_steps):
+from metric import Meter
+def train(epoch, device, model, train_dataloader, accumulation_steps, optimizer):
     meter = Meter("train", epoch)
-    start = time.strftime("%H:%M:%S")
     model.train(True)
     running_loss = 0.0
     optimizer.zero_grad()

@@ -1,7 +1,7 @@
-
-def eval(epoch, net, val_dataloader, accumulation_steps):
+from metric import Meter
+from lib import *
+def eval(epoch, device, model, val_dataloader, accumulation_steps, optimizer):
     meter = Meter("val", epoch)
-    start = time.strftime("%H:%M:%S")
     model.train(False)
     running_loss = 0.0
     total_batches = len(val_dataloader)
@@ -19,6 +19,6 @@ def eval(epoch, net, val_dataloader, accumulation_steps):
             meter.update(targets, outputs)
 
     epoch_loss = (running_loss * accumulation_steps) / total_batches
-    dice, iou = epoch_log("val", epoch, epoch_loss, meter, start)
+    dice, iou = epoch_log("val", epoch, epoch_loss, meter)
     torch.cuda.empty_cache()
     return epoch_loss, dice, iou
