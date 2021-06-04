@@ -33,7 +33,7 @@ if __name__ == "__main__":
     lr = hyperparams["LEARNING_RATE"]
     k_fold = hyperparams["K_FOLD"]
     device = torch.device("cpu")
-    criterion = MixedLoss(10.0, 2.0)
+    criterion = MixedLoss(0.3, 3.5)
     optimizer = optim.Adam(model.parameters(), lr=float(lr))
     accumulation_steps = 32 // 4
     best_loss = float("inf")
